@@ -1,7 +1,7 @@
 # DEVELOPMENT ONLY
 
 # Clone Hero: Battle Royale Management System for FrostedGH's Igloo
-# last modified: 03-26-19
+# last modified: 04-01-19
 # MAKE SURE PERMISSIONS ARE GOOD FOR BOT IN BOTH MOD AND BR CHANNELS
 from typing import BinaryIO
 import discord
@@ -11,6 +11,7 @@ import pytesseract
 from sql_tools import db_connect, create_contestant, get_current_score, update_score, get_all_scores, get_discord_id
 import re
 import math
+from datetime import timedelta, datetime
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
 con = db_connect()
@@ -152,7 +153,9 @@ async def start_round(ctx):
         return
     print(f"Submissions open for this round. Cross your fingers")
     await ctx.message.delete()
-    await ctx.channel.send(f"Submissions Open for {song_name}. Entries due by Saturday, March 30 at 10:00PM CST.")
+    date_time = datetime.now() + timedelta(days=3)
+    date_time_formatted = date_time.strftime("%A, %B %d")
+    await ctx.channel.send(f"Submissions Open for {song_name}. Entries due by {date_time_formatted} at 10:00PM CST.")
 
 
 @bot.event
