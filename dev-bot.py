@@ -2,6 +2,7 @@
 
 # Clone Hero: Battle Royale Management System for FrostedGH's Igloo
 # last modified: 03-26-19
+# MAKE SURE PERMISSIONS ARE GOOD FOR BOT IN BOTH MOD AND BR CHANNELS
 from typing import BinaryIO
 import discord
 from discord.ext import commands
@@ -14,9 +15,11 @@ import math
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
 con = db_connect()
 
-bot = commands.Bot("!")
+song_name = "Sidney's Fanatical Solo Frenzy"
 
-token = "NTU3Mzc2Njg3MDYzNTY0MzA1.D3gwkQ.cEApBjOar5EumfW2jzU27I4ANO8"
+bot = commands.Bot("!")
+# discord bot token (DEV VALUES CURRENTLY)
+token = "NTU3Mzc2Njg3MDYzNTY0MzA1.D33KZw.sWSPTwerQoNKHTRhAU47VHCaGk8"
 mgmt_channel = 559112691881345030
 
 
@@ -39,12 +42,14 @@ async def submit(ctx):
         await ctx.message.delete()
         return
     message_attachment = ctx.message.attachments[0]
-
+    # creates file in br directory for read/write
     f: BinaryIO = open(f'c:\\temp\\chbr\\dev\\{message_author}-{ctx.message.created_at.strftime("%m-%d-%M")}.png',
                        "ab+")
     await message_attachment.save(fp=f)
     await ctx.message.delete()
 
+    # iterates through the tesseract img to string function to find
+    # score and speed based on score screen
     image_text = pytesseract.image_to_string(Image.open(
         f'c:\\temp\\chbr\\dev\\{message_author}-{ctx.message.created_at.strftime("%m-%d-%M")}.png'))
     for line in image_text.splitlines(True):
@@ -107,8 +112,9 @@ async def submit(ctx):
     f.close()
 
 
+# tallies all scores and prints and mentions in order of descending score in the mod channel
 @bot.command()
-async def tally_scores(ctx):
+async def tally(ctx):
     message_author = ctx.author
 
     if str(ctx.channel) != 'moderators':
@@ -116,7 +122,7 @@ async def tally_scores(ctx):
         print("not in channel")
         return
 
-    await ctx.channel.send(f'Okay {message_author.mention}, Retrieving Final Scores!')
+    await ctx.channel.send("Okay, Retrieving Final Scores!")
     all_scores = get_all_scores(con)
     for row in all_scores:
         id_unstripped = get_discord_id(con, str(row[0]))
@@ -124,17 +130,29 @@ async def tally_scores(ctx):
         user_object = bot.get_user(int(id_stripped))
         await ctx.channel.send(f"{user_object.mention} with a score of {str(row[1])}")
 
+    await ctx.message.delete()
     print(f"The scores have been tallied and sent by {message_author}")
 
 
+# sends a close message to the submission channel
 @bot.command()
-async def close(ctx):
+async def close_round(ctx):
     if str(ctx.channel) != 'brtest':
         print("not in channel")
         return
     print("Submissions Closed for this round.")
     await ctx.message.delete()
     await ctx.channel.send('ALL SUBMISSIONS CLOSED FOR THIS ROUND. Please await the mods for the tally and next chart.')
+
+
+@bot.command()
+async def start_round(ctx):
+    if str(ctx.channel) != 'brtest':
+        print("not in channel")
+        return
+    print(f"Submissions open for this round. Cross your fingers")
+    await ctx.message.delete()
+    await ctx.channel.send(f"Submissions Open for {song_name}. Entries due by Saturday, March 30 at 10:00PM CST.")
 
 
 @bot.event
